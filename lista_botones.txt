@@ -1,0 +1,17 @@
+1;corte
+2;vuelo
+3;surf
+4;fuerza
+5;destello
+6;golpe roca
+7;buceo
+8;menu habilidades
+p;Prob captura
+f;flauta
+m;mapa/mega
+control;modificadores
+<;ataques
+enter;menu
+espacio;pokemons
+o;objetos
+b;pokeball
