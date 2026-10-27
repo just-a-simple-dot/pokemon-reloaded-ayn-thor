@@ -2,11 +2,14 @@ package com.klisee.reloaded
 
 import android.app.NativeActivity
 import android.content.Context
+import android.hardware.display.DisplayManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.util.Log
 import android.view.KeyEvent
@@ -78,6 +81,50 @@ class GameActivity : NativeActivity() {
                 focusRequest = request
             }
         }
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Second screen. On a dual-screen device (AYN Thor) the other screen shows shortcut buttons
+    // that press game keys. It follows the activity being visible and screens coming and going.
+
+    private var bottomScreen: BottomScreen? = null
+
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = refreshBottomScreen()
+        override fun onDisplayRemoved(displayId: Int) = refreshBottomScreen()
+        override fun onDisplayChanged(displayId: Int) = refreshBottomScreen()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        getSystemService(DisplayManager::class.java)?.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
+        refreshBottomScreen()
+    }
+
+    override fun onStop() {
+        getSystemService(DisplayManager::class.java)?.unregisterDisplayListener(displayListener)
+        dismissBottomScreen()
+        super.onStop()
+    }
+
+    private fun refreshBottomScreen() {
+        if (isFinishing || isDestroyed) return
+        val target = BottomScreen.findDisplay(this, window.decorView.display)
+        val current = bottomScreen
+        if (current != null && current.display.displayId == target?.displayId && current.isShowing) return
+        dismissBottomScreen()
+        if (target == null) return
+        runCatching {
+            BottomScreen(this, target) { key, down -> nativeKey(key, down) }.also {
+                it.show()
+                bottomScreen = it
+            }
+        }.onFailure { Log.w(TAG, "no se pudo abrir la segunda pantalla", it) }
+    }
+
+    private fun dismissBottomScreen() {
+        runCatching { bottomScreen?.dismiss() }
+        bottomScreen = null
     }
 
     override fun onPause() {
@@ -256,6 +303,9 @@ class GameActivity : NativeActivity() {
     external fun nativeBackspace()
     external fun nativeEnter()
     external fun nativeImeInset(height: Int)
+
+    /** Presses or releases a game key, named as in `controls.conf` (`Z`, `RETURN`, `1`, `<`...). */
+    external fun nativeKey(key: String, down: Boolean)
 
     companion object {
         /** Called from the engine when a touch control is pressed, to make it vibrate. */

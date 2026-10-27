@@ -18,7 +18,7 @@ val keystoreProperties = Properties().apply {
 //   ./build.sh assembleRelease -PtargetAbi=x86_64
 //   ./build.sh assembleRelease -PtargetAbi=universal
 // after building the same ABIs with cargo-ndk (the error below prints the exact commands).
-val appVersion = "0.3.9"
+val appVersion = "0.3.9-thor.1"
 val allAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 val rustTargetOf = mapOf(
     "arm64-v8a" to "aarch64-linux-android",
@@ -54,11 +54,12 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.klisee.reloaded"
+        // Own id, so this dual-screen build installs beside the original app instead of over it.
+        applicationId = "com.klisee.reloaded.thor"
         // AAudio exists since Android 8 (API 26), which is the real floor of the engine.
         minSdk = 26
         targetSdk = 36
-        versionCode = 16
+        versionCode = 17
         versionName = appVersion
         ndk { abiFilters += buildAbis }
     }

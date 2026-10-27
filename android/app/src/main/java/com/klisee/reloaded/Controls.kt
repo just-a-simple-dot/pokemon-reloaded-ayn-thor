@@ -26,10 +26,10 @@ fun connectedPads(context: Context): List<String> {
  * an Xbox pad, a PlayStation one and a generic one at the same time.
  */
 enum class ControlAction(val key: String, val defaultCode: Int) {
-    Z("Z", 96), // A (Xbox, Nintendo) / X (PlayStation) / abajo del grupo derecho
-    X("X", 97), // B (Xbox, Nintendo) / circulo (PlayStation) / derecha
-    C("C", 99), // X (Xbox, Nintendo) / cuadrado (PlayStation) / izquierda
-    V("V", 100), // Y (Xbox, Nintendo) / triangulo (PlayStation) / arriba
+    Z("Z", 99), // X (Xbox) / cuadrado (PlayStation) / izquierda del grupo derecho
+    X("X", 96), // A (Xbox) / cruz (PlayStation) / abajo
+    C("C", 97), // B (Xbox) / circulo (PlayStation) / derecha
+    V("V", 100), // Y (Xbox) / triangulo (PlayStation) / arriba
     ENTER("RETURN", 109), // select, share, view, menos
     SPACE("SPACE", 108), // start, options, menu, mas
     B("B", 103), // R1, RB

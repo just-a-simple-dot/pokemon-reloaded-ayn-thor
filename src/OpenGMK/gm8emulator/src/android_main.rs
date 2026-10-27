@@ -73,10 +73,10 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
         // same keys the keyboard does. That is the whole trick, and it needs nothing from the game:
         //
         //   D-pad                  -> arrow keys
-        //   A (Xbox/Nintendo) / X (PS)      -> Z
-        //   B (Xbox/Nintendo) / circle (PS) -> X
-        //   X (Xbox/Nintendo) / square (PS) -> C
-        //   Y (Xbox/Nintendo) / triangle    -> V
+        //   X (Xbox) / square (PS)          -> Z
+        //   A (Xbox) / cross (PS)           -> X
+        //   B (Xbox) / circle (PS)          -> C
+        //   Y (Xbox) / triangle             -> V
         //   select, share, view, minus      -> Enter
         //   start, options, menu, plus      -> Space
         //   R1 / RB / R                      -> B
@@ -84,9 +84,9 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
         //   R2 / RT / ZR                     -> O
         //   L2 / LT / ZL                     -> S
         //   stick press (either one)         -> E
-        AKEYCODE_BUTTON_A => Key::Z,
-        AKEYCODE_BUTTON_B => Key::X,
-        AKEYCODE_BUTTON_X => Key::C,
+        AKEYCODE_BUTTON_X => Key::Z,
+        AKEYCODE_BUTTON_A => Key::X,
+        AKEYCODE_BUTTON_B => Key::C,
         AKEYCODE_BUTTON_Y => Key::V,
         AKEYCODE_BUTTON_SELECT => Key::Return,
         AKEYCODE_BUTTON_START => Key::Space,
@@ -293,10 +293,16 @@ fn parse_key(name: &str) -> Option<Key> {
         if byte.is_ascii_uppercase() {
             return LETTERS.get(usize::from(byte - b'A')).copied()
         }
+        if byte.is_ascii_digit() {
+            return DIGITS.get(usize::from(byte - b'0')).copied()
+        }
     }
     Some(match upper.as_str() {
         "RETURN" | "ENTER" => Key::Return,
         "SPACE" => Key::Space,
+        "CONTROL" | "CTRL" => Key::LeftControl,
+        // The key beside the left Shift on a Spanish keyboard, the one that types `<`.
+        "<" | "LESS" => Key::Oem102,
         "ESCAPE" => Key::Escape,
         "TAB" => Key::Tab,
         "BACKSPACE" => Key::Backspace,
@@ -307,6 +313,12 @@ fn parse_key(name: &str) -> Option<Key> {
         _ => return None,
     })
 }
+
+/// The number row, indexed by digit.
+const DIGITS: [Key; 10] = [
+    Key::Alpha0, Key::Alpha1, Key::Alpha2, Key::Alpha3, Key::Alpha4,
+    Key::Alpha5, Key::Alpha6, Key::Alpha7, Key::Alpha8, Key::Alpha9,
+];
 
 /// Holds and releases the arrow keys the physical stick asks for, so pushing it feels exactly like
 /// the on-screen joystick.
@@ -1030,6 +1042,24 @@ pub extern "system" fn Java_com_klisee_reloaded_GameActivity_nativeImeInset<'loc
     // gesture - so whether it is up is taken from its height. Without this, the next touch on the
     // game's text would be read as "already up" and would not raise it again.
     IME_SHOWN.store(height > 0, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Called from the second screen's shortcut buttons: presses (or releases) a key of the game, named
+/// the same way as in `controls.conf`.
+#[no_mangle]
+pub extern "system" fn Java_com_klisee_reloaded_GameActivity_nativeKey<'local>(
+    mut env: jni::JNIEnv<'local>,
+    _this: jni::objects::JObject<'local>,
+    name: jni::objects::JString<'local>,
+    down: jni::sys::jboolean,
+) {
+    let name: String = env.get_string(&name).map(Into::into).unwrap_or_default();
+    let Some(key) = parse_key(&name) else { return };
+    android::push_input(if down != 0 {
+        ramen::platform::android::InputEvent::KeyDown { key, text: None }
+    } else {
+        ramen::platform::android::InputEvent::KeyUp { key }
+    });
 }
 
 /// Called from the activity when another app takes (or gives back) the audio focus, so the game's

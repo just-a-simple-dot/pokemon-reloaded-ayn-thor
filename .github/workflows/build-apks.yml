@@ -82,6 +82,24 @@ jobs:
             cargo +"$RUST_VERSION" ndk -t "${{ matrix.abi }}" --platform 29 build -p gm8emulator --release
           fi
 
+      # With the fork's key in the repo secrets every build is signed the same way, so a new APK
+      # installs over the previous one. Without them Gradle falls back to the (per-run) debug key.
+      - name: Restore signing key
+        working-directory: android
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.THOR_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.THOR_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "Sin secrets de firma: se firma con la clave debug."
+            exit 0
+          fi
+          mkdir -p keystore
+          echo "$KEYSTORE_B64" | base64 -d > keystore/thor.p12
+          printf 'storeFile=keystore/thor.p12\nstorePassword=%s\nkeyAlias=thor\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
+
       - name: Build release APK
         working-directory: android
         run: gradle --no-daemon :app:assembleRelease -PtargetAbi=${{ matrix.abi }}
