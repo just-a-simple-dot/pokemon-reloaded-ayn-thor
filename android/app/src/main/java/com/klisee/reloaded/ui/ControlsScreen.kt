@@ -35,21 +35,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.klisee.reloaded.ControlAction
+import com.klisee.reloaded.PadButton
 import com.klisee.reloaded.Preferences
 import com.klisee.reloaded.buttonName
 import com.klisee.reloaded.connectedPads
-import com.klisee.reloaded.hint
+import com.klisee.reloaded.keyHint
+import com.klisee.reloaded.keyLabel
 import com.klisee.reloaded.writeControlsFile
 import java.io.File
 
-/** The action a button is currently bound to, for showing what a press will do. */
-private fun actionFor(bindings: Map<ControlAction, Int>, code: Int): ControlAction? =
-    ControlAction.entries.firstOrNull { (bindings[it] ?: it.defaultCode) == code }
+/** "Ctrl - Modificadores": a key and, when known, what it does in the game. */
+private fun keyDescription(key: String?): String =
+    listOf(keyLabel(key), keyHint(key)).filter { it.isNotEmpty() }.joinToString(" - ")
 
 /**
- * A view whose only job is to sit there focused and report every pad button pressed. That is what
- * makes this screen both a test bench and the way a remap learns which button was meant.
+ * A view whose only job is to sit there focused and report every pad button pressed, so this screen
+ * works as a test bench and a press can open that button's key picker.
  */
 private class PadProbe(context: Context) : View(context) {
     var onKey: ((Int) -> Unit)? = null
@@ -87,19 +88,32 @@ private class PadProbe(context: Context) : View(context) {
 @Composable
 fun ControlsScreen(prefs: Preferences, filesDir: File, onBack: () -> Unit) {
     val context = LocalContext.current
-    var bindings by remember { mutableStateOf(prefs.controlBindings) }
+    var keys by remember { mutableStateOf(prefs.padKeys) }
     var stick by remember { mutableStateOf(prefs.stickEnabled) }
-    var capturing by remember { mutableStateOf<ControlAction?>(null) }
+    var picking by remember { mutableStateOf<PadButton?>(null) }
     var lastCode by remember { mutableStateOf<Int?>(null) }
     var stickReadout by remember { mutableStateOf(0f to 0f) }
     var pads by remember { mutableStateOf(connectedPads(context)) }
 
-    fun store(newBindings: Map<ControlAction, Int>, newStick: Boolean) {
-        bindings = newBindings
+    fun store(newKeys: Map<PadButton, String?>, newStick: Boolean) {
+        keys = newKeys
         stick = newStick
-        prefs.controlBindings = newBindings
+        prefs.padKeys = newKeys
         prefs.stickEnabled = newStick
-        writeControlsFile(filesDir, newBindings, newStick, connectedPads(context).isNotEmpty())
+        writeControlsFile(filesDir, newKeys, newStick, connectedPads(context).isNotEmpty())
+    }
+
+    picking?.let { button ->
+        KeyPickerDialog(
+            title = "Tecla para ${button.label}",
+            current = keys[button],
+            allowNone = true,
+            onPick = { key ->
+                store(keys + (button to key), stick)
+                picking = null
+            },
+            onDismiss = { picking = null },
+        )
     }
 
     // Pads come and go while this screen is open, so the list is kept current.
@@ -141,13 +155,12 @@ fun ControlsScreen(prefs: Preferences, filesDir: File, onBack: () -> Unit) {
             SettingsGroup("Probar", modifier = Modifier.padding(horizontal = 16.dp)) {
                 InfoRow(
                     icon = Icons.Filled.SportsEsports,
-                    title = capturing?.let { "Pulsa el boton para la tecla ${it.key}" } ?: "Ultimo boton pulsado",
-                    value = when {
-                        lastCode == null -> "Pulsa algo en el mando; aqui dira que tecla dispara"
+                    title = "Ultimo boton pulsado",
+                    value = when (val code = lastCode) {
+                        null -> "Pulsa algo en el mando; aqui dira que tecla dispara"
                         else -> {
-                            val action = actionFor(bindings, lastCode!!)
-                            val name = buttonName(lastCode!!)
-                            if (action == null) "$name - sin asignar" else "$name -> tecla ${action.key}"
+                            val button = PadButton.entries.firstOrNull { it.code == code }
+                            if (button == null) buttonName(code) else "${button.label} -> ${keyDescription(keys[button])}"
                         }
                     },
                     items = 1,
@@ -158,20 +171,11 @@ fun ControlsScreen(prefs: Preferences, filesDir: File, onBack: () -> Unit) {
                     factory = { ctx -> PadProbe(ctx).apply { requestFocus() } },
                     modifier = Modifier.height(1.dp),
                     update = { probe ->
-                        probe.onKey = { code ->
-                            lastCode = code
-                            capturing?.let { action ->
-                                store(bindings + (action to code), stick)
-                                capturing = null
-                            }
-                        }
+                        probe.onKey = { code -> lastCode = code }
                         probe.onStick = { x, y -> stickReadout = x to y }
                         probe.requestFocus()
                     },
                 )
-                if (capturing != null) {
-                    TextButton(onClick = { capturing = null }) { Text("Cancelar el cambio") }
-                }
                 val (stickX, stickY) = stickReadout
                 if (stick && (stickX != 0f || stickY != 0f)) {
                     Text(
@@ -182,18 +186,14 @@ fun ControlsScreen(prefs: Preferences, filesDir: File, onBack: () -> Unit) {
             }
 
             SettingsGroup("Botones", modifier = Modifier.padding(horizontal = 16.dp)) {
-                ControlAction.entries.forEachIndexed { index, action ->
-                    val code = bindings[action] ?: action.defaultCode
+                PadButton.entries.forEachIndexed { index, button ->
                     NavRow(
                         icon = Icons.Filled.SportsEsports,
-                        title = "Tecla ${action.key}",
-                        subtitle = listOfNotNull(
-                            buttonName(code),
-                            action.hint.takeIf { it.isNotEmpty() },
-                        ).joinToString(" - "),
-                        items = ControlAction.entries.size,
+                        title = button.label,
+                        subtitle = keyDescription(keys[button]),
+                        items = PadButton.entries.size,
                         index = index,
-                        onClick = { capturing = action },
+                        onClick = { picking = button },
                     )
                 }
             }
@@ -206,12 +206,15 @@ fun ControlsScreen(prefs: Preferences, filesDir: File, onBack: () -> Unit) {
                     checked = stick,
                     items = 1,
                     index = 0,
-                    onCheckedChange = { store(bindings, it) },
+                    onCheckedChange = { store(keys, it) },
                 )
             }
 
             Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                TextButton(onClick = { store(emptyMap(), true) }) {
+                TextButton(onClick = {
+                    prefs.resetPadKeys()
+                    store(prefs.padKeys, true)
+                }) {
                     Icon(Icons.Filled.RestartAlt, contentDescription = null)
                     androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
                     Text("Restaurar los botones por defecto")

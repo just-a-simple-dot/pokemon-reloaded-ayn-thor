@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Info
@@ -75,6 +76,7 @@ fun SettingsScreen(
     onTouchSettings: () -> Unit,
     onFpsSettings: () -> Unit,
     onMySaves: () -> Unit,
+    onBottomPanel: () -> Unit,
     onUpdateFound: (Update.Release) -> Unit,
     bottomBar: @Composable () -> Unit = {},
 ) {
@@ -232,10 +234,21 @@ fun SettingsScreen(
                 NavRow(
                     icon = Icons.Filled.SportsEsports,
                     title = "Mando",
-                    subtitle = "Elige que boton del mando hace cada tecla, y pruebalo",
+                    subtitle = "Elige que tecla pulsa cada boton del mando, y pruebalo",
                     items = 1,
                     index = 0,
                     onClick = onControls,
+                )
+            }
+
+            SettingsGroup("Pantalla inferior") {
+                NavRow(
+                    icon = Icons.Filled.Dashboard,
+                    title = "Pantalla inferior",
+                    subtitle = "Nombre, tecla y orden de los botones de la segunda pantalla",
+                    items = 1,
+                    index = 0,
+                    onClick = onBottomPanel,
                 )
             }
 

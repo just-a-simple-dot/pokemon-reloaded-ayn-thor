@@ -1,0 +1,17 @@
+#Movimientos
+1;corte
+2;vuelo
+3;surf
+4;fuerza
+5;destello
+6;golpe roca
+7;buceo
+8;menu habilidades
+#accessos 
+m;mapa  ##segunda opcion al medio 
+enter;menu ##primera opcion al medio 
+espacio;ver pokemons ##segunda opcion a la derecha 
+o;objetos ##primera opcion a la derecha
+b;sacar pokemon ##primera opcion a la izquierda
+v;bicicleta ##segunda opcion a la izquierda
+c;caña de pescar ##tercera opcion a la izquierda

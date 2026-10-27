@@ -19,70 +19,39 @@ fun connectedPads(context: Context): List<String> {
 }
 
 /**
- * The keyboard keys the game reads that a pad button can be bound to.
+ * The pad buttons the player can give a key to, with the key each one presses out of the box.
  *
- * The game only ever reads the keyboard, so controller support is a pad pressing those keys.
- * Android reports the same key codes for every brand of pad, which is what lets one layout cover
- * an Xbox pad, a PlayStation one and a generic one at the same time.
+ * The game only ever reads the keyboard, so controller support is a pad pressing keys. Android
+ * reports the same key codes for every brand of pad, which is what lets one layout cover an Xbox
+ * pad, a PlayStation one and a generic one at the same time.
  */
-enum class ControlAction(val key: String, val defaultCode: Int) {
-    Z("Z", 99), // X (Xbox) / cuadrado (PlayStation) / izquierda del grupo derecho
-    X("X", 96), // A (Xbox) / cruz (PlayStation) / abajo
-    C("C", 97), // B (Xbox) / circulo (PlayStation) / derecha
-    V("V", 100), // Y (Xbox) / triangulo (PlayStation) / arriba
-    ENTER("RETURN", 109), // select, share, view, menos
-    SPACE("SPACE", 108), // start, options, menu, mas
-    SPACE_R3("SPACE", 107), // pulsar el stick derecho
-    B("B", 103), // R1, RB
-    CONTROL("CONTROL", 102), // L1, LB
-    O("O", 105), // R2, RT, ZR
-    LESS("<", 104), // L2, LT, ZL
-    P("P", 106), // pulsar el stick izquierdo
+enum class PadButton(val code: Int, val label: String, val defaultKey: String?) {
+    A(96, "A / cruz", "X"),
+    B(97, "B / círculo", "C"),
+    X(99, "X / cuadrado", "Z"),
+    Y(100, "Y / triángulo", "V"),
+    L1(102, "LB / L1", "CONTROL"),
+    R1(103, "RB / R1", "B"),
+    L2(104, "LT / L2", "<"),
+    R2(105, "RT / R2", "O"),
+    L3(106, "Pulsar stick izquierdo", "P"),
+    R3(107, "Pulsar stick derecho", "SPACE"),
+    SELECT(109, "Select / View", "RETURN"),
+    START(108, "Start / Menu", "SPACE"),
 }
-
-/** What the key does in the game, for the ones that are known. */
-val ControlAction.hint: String
-    get() = when (this) {
-        ControlAction.Z -> "Interactuar y confirmar"
-        ControlAction.X -> "Cancelar y correr"
-        ControlAction.ENTER -> "Menu"
-        ControlAction.SPACE, ControlAction.SPACE_R3 -> "Pokemon"
-        ControlAction.B -> "Pokeball"
-        ControlAction.CONTROL -> "Modificadores"
-        ControlAction.O -> "Objetos"
-        ControlAction.LESS -> "Ataques"
-        ControlAction.P -> "Probabilidad de captura"
-        else -> ""
-    }
 
 /** The name of a pad button, for showing it on screen. */
-fun buttonName(code: Int): String = when (code) {
-    96 -> "A"
-    97 -> "B"
-    99 -> "X"
-    100 -> "Y"
-    102 -> "L1"
-    103 -> "R1"
-    104 -> "L2"
-    105 -> "R2"
-    106 -> "Stick izquierdo"
-    107 -> "Stick derecho"
-    108 -> "Start"
-    109 -> "Select"
-    else -> "Boton $code"
-}
+fun buttonName(code: Int): String = PadButton.entries.firstOrNull { it.code == code }?.label ?: "Botón $code"
 
 /**
- * Writes the layout the emulator reads when it starts.
- *
- * Only the buttons the player actually changed are written, so everything they did not touch keeps
- * the built-in layout (which, for instance, accepts either stick press for `E`).
+ * Writes the layout the emulator reads when it starts: every pad button with its key, or `NONE`
+ * for one the player left without a key.
  */
-fun writeControlsFile(filesDir: File, bindings: Map<ControlAction, Int>, stick: Boolean, padConnected: Boolean) {
+fun writeControlsFile(filesDir: File, keys: Map<PadButton, String?>, stick: Boolean, padConnected: Boolean) {
     val text = buildString {
         appendLine("# Escrito por la pantalla de Controles. El emulador lo lee al arrancar.")
-        for (action in ControlAction.entries) {
-            bindings[action]?.let { appendLine("$it=${action.key}") }
+        for (button in PadButton.entries) {
+            appendLine("${button.code}=${keys[button] ?: "NONE"}")
         }
         appendLine("stick=${if (stick) 1 else 0}")
         // With a pad connected the game starts with the touch controls hidden; touching the screen

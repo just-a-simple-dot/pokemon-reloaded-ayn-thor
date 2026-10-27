@@ -115,7 +115,10 @@ class GameActivity : NativeActivity() {
         dismissBottomScreen()
         if (target == null) return
         runCatching {
-            BottomScreen(this, target) { key, down -> nativeKey(key, down) }.also {
+            val prefs = Preferences(this)
+            BottomScreen(this, target, prefs.bottomPanel(false), prefs.bottomPanel(true), inBattle) { key, down ->
+                nativeKey(key, down)
+            }.also {
                 it.show()
                 bottomScreen = it
             }
@@ -404,7 +407,14 @@ class GameActivity : NativeActivity() {
         @JvmStatic
         fun onGameBattle(inBattle: Boolean, trainer: String?, species: Int) {
             DiscordRpcManager.setBattle(inBattle, trainer, species)
+            this.inBattle = inBattle
+            val activity = instance ?: return
+            activity.runOnUiThread { activity.bottomScreen?.battle = inBattle }
         }
+
+        /** Whether the game is in a battle, so a second screen opened now starts on the right panel. */
+        @Volatile
+        private var inBattle = false
 
         /** `rmRuta1` / `Room_PuebloPaleta` -> `Ruta 1` / `Pueblo Paleta`. */
         private fun prettyRoute(raw: String?): String? {

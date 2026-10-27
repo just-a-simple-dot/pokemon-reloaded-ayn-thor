@@ -25,38 +25,6 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import java.util.Date
 
-/** One shortcut of the second screen: the game key it presses and what it does in the game. */
-private class Shortcut(val key: String, val keyLabel: String, val text: String)
-
-/** The field moves, on the number row. */
-private val MOVES = listOf(
-    Shortcut("1", "1", "Corte"),
-    Shortcut("2", "2", "Vuelo"),
-    Shortcut("3", "3", "Surf"),
-    Shortcut("4", "4", "Fuerza"),
-    Shortcut("5", "5", "Destello"),
-    Shortcut("6", "6", "Golpe roca"),
-    Shortcut("7", "7", "Buceo"),
-    Shortcut("8", "8", "Menú habilidades"),
-)
-
-/** The game's menus and tools, row by row in a three-column grid. */
-private val TOOLS = listOf(
-    Shortcut("B", "B", "Pokéball"),
-    Shortcut("RETURN", "Enter", "Menú"),
-    Shortcut("O", "O", "Objetos"),
-
-    Shortcut("<", "<", "Ataques"),
-    Shortcut("CONTROL", "Ctrl", "Modificadores"),
-    Shortcut("SPACE", "Espacio", "Pokémon"),
-
-    Shortcut("E", "E", "Escapar combate"),
-    Shortcut("M", "M", "Mapa / Mega"),
-    Shortcut("F", "F", "Flauta"),
-
-    Shortcut("P", "P", "Prob. captura"),
-)
-
 /** A tap shorter than this is held until it, so the game (at 30 steps/s) cannot miss the key. */
 private const val MIN_HOLD_MS = 80L
 
@@ -75,8 +43,29 @@ private const val PRESSED_COLOR = 0xFFE8A33D.toInt()
 class BottomScreen(
     context: Context,
     display: Display,
+    private val fieldPanel: PanelConfig,
+    private val battlePanel: PanelConfig,
+    battle: Boolean,
     private val press: (key: String, down: Boolean) -> Unit,
 ) : Presentation(context, display) {
+
+    /** Whether the battle panel is the one on screen. The game tells us when a battle starts or ends. */
+    var battle: Boolean = battle
+        set(value) {
+            if (field == value) return
+            field = value
+            if (root != null) render()
+        }
+
+    private var root: LinearLayout? = null
+
+    /** Keys a finger is holding right now, released if the panel changes under it. */
+    private val held = mutableSetOf<String>()
+
+    private fun send(key: String, down: Boolean) {
+        if (down) held.add(key) else if (!held.remove(key)) return
+        press(key, down)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,17 +73,33 @@ class BottomScreen(
             addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-        val root = LinearLayout(context).apply {
+        root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(BACKGROUND)
             val pad = dp(8)
             setPadding(pad, pad, pad, pad)
         }
-        root.addView(title("Movimientos"))
-        addGrid(root, MOVES, columns = 4, color = MOVE_COLOR)
-        root.addView(title("Accesos"))
-        addGrid(root, TOOLS, columns = 3, color = TOOL_COLOR, trailing = status())
-        setContentView(root)
+        setContentView(root!!)
+        render()
+    }
+
+    /** Lays out the panel for the current state, field or battle. */
+    private fun render() {
+        val root = root ?: return
+        held.toList().forEach { send(it, false) }
+        root.removeAllViews()
+        val sections = (if (battle) battlePanel else fieldPanel).sections.filter { it.buttons.isNotEmpty() }
+        sections.forEachIndexed { index, section ->
+            if (section.title.isNotBlank()) root.addView(title(section.title))
+            // The first section keeps the blue of the field moves, the rest the grey of the menus.
+            val color = if (index == 0) MOVE_COLOR else TOOL_COLOR
+            val last = index == sections.lastIndex
+            addGrid(root, section.buttons, section.columns, color, trailing = if (last) status() else null)
+        }
+        // With no buttons at all the clock still has somewhere to go.
+        if (sections.isEmpty()) root.addView(status(), LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        showClock()
+        lastBattery?.let { showBattery(it) }
     }
 
     // ------------------------------------------------------------------------------------------
@@ -144,6 +149,7 @@ class BottomScreen(
     }
 
     override fun onStop() {
+        held.toList().forEach { send(it, false) }
         runCatching { context.unregisterReceiver(statusReceiver) }
         super.onStop()
     }
@@ -152,7 +158,11 @@ class BottomScreen(
         clock.text = android.text.format.DateFormat.getTimeFormat(context).format(Date())
     }
 
+    /** The last battery report, to fill in a freshly laid out panel without waiting for the next one. */
+    private var lastBattery: Intent? = null
+
     private fun showBattery(intent: Intent) {
+        lastBattery = intent
         val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
         if (level < 0 || scale <= 0) return
@@ -169,8 +179,20 @@ class BottomScreen(
         setPadding(dp(6), dp(6), dp(6), dp(2))
     }
 
-    /** Lays the shortcuts out in rows; `trailing`, if any, fills what the last row leaves free. */
-    private fun addGrid(root: LinearLayout, shortcuts: List<Shortcut>, columns: Int, color: Int, trailing: View? = null) {
+    /**
+     * Lays the shortcuts out in rows. `trailing`, if any, fills what the last row leaves free, or gets
+     * a row of its own when the last row is full.
+     */
+    private fun addGrid(root: LinearLayout, shortcuts: List<PanelButton>, columns: Int, color: Int, trailing: View? = null) {
+        if (trailing != null && shortcuts.size % columns == 0) {
+            addRows(root, shortcuts, columns, color, null)
+            root.addView(trailing, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        } else {
+            addRows(root, shortcuts, columns, color, trailing)
+        }
+    }
+
+    private fun addRows(root: LinearLayout, shortcuts: List<PanelButton>, columns: Int, color: Int, trailing: View?) {
         for (row in shortcuts.chunked(columns)) {
             val line = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             for (shortcut in row) line.addView(button(shortcut, color), LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f))
@@ -186,7 +208,7 @@ class BottomScreen(
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun button(shortcut: Shortcut, color: Int): View {
+    private fun button(shortcut: PanelButton, color: Int): View {
         val shape = GradientDrawable().apply {
             cornerRadius = dp(14).toFloat()
             setColor(color)
@@ -196,14 +218,14 @@ class BottomScreen(
             gravity = Gravity.CENTER
             background = shape
             addView(TextView(context).apply {
-                text = shortcut.text
+                text = shortcut.label
                 setTextColor(Color.WHITE)
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
             })
             addView(TextView(context).apply {
-                text = shortcut.keyLabel
+                text = keyLabel(shortcut.key)
                 setTextColor(0xB3FFFFFF.toInt())
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
                 gravity = Gravity.CENTER
@@ -212,7 +234,7 @@ class BottomScreen(
         var downAt = 0L
         val release = Runnable {
             shape.setColor(color)
-            press(shortcut.key, false)
+            send(shortcut.key, false)
         }
         view.setOnTouchListener { v, event ->
             when (event.actionMasked) {
@@ -221,7 +243,7 @@ class BottomScreen(
                     downAt = SystemClock.uptimeMillis()
                     shape.setColor(PRESSED_COLOR)
                     v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                    press(shortcut.key, true)
+                    send(shortcut.key, true)
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     val held = SystemClock.uptimeMillis() - downAt

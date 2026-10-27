@@ -79,18 +79,38 @@ class Preferences(context: Context) {
             prefs.edit().putBoolean("onboardingDone", value).apply()
         }
 
-    /** Pad buttons the player has rebound, as `ACTION=keyCode`. Absent means the built-in layout. */
-    var controlBindings: Map<ControlAction, Int>
-        get() = prefs.getStringSet("controlBindings", emptySet()).orEmpty().mapNotNull { entry ->
-            val parts = entry.split('=')
-            if (parts.size != 2) return@mapNotNull null
-            val action = ControlAction.entries.firstOrNull { it.name == parts[0] } ?: return@mapNotNull null
-            val code = parts[1].toIntOrNull() ?: return@mapNotNull null
-            action to code
-        }.toMap()
-        set(value) {
-            prefs.edit().putStringSet("controlBindings", value.map { "${it.key.name}=${it.value}" }.toSet()).apply()
+    /**
+     * The key each pad button presses, with the built-in layout for the ones never changed. Stored as
+     * `BUTTON=KEY`, with `NONE` for a button left without a key.
+     */
+    var padKeys: Map<PadButton, String?>
+        get() {
+            val saved = prefs.getStringSet("padKeys", emptySet()).orEmpty().mapNotNull { entry ->
+                val parts = entry.split('=', limit = 2)
+                if (parts.size != 2) return@mapNotNull null
+                val button = PadButton.entries.firstOrNull { it.name == parts[0] } ?: return@mapNotNull null
+                button to parts[1].takeIf { it != "NONE" }
+            }.toMap()
+            return PadButton.entries.associateWith { if (it in saved) saved[it] else it.defaultKey }
         }
+        set(value) {
+            prefs.edit().putStringSet("padKeys", value.map { "${it.key.name}=${it.value ?: "NONE"}" }.toSet()).apply()
+        }
+
+    /** Forgets every change to the pad, back to the built-in layout. */
+    fun resetPadKeys() {
+        prefs.edit().remove("padKeys").apply()
+    }
+
+    /** What the second screen shows in or out of battle; the built-in panel until the player edits it. */
+    fun bottomPanel(battle: Boolean): PanelConfig =
+        prefs.getString(panelKey(battle), null)?.let { PanelConfig.fromJson(it) } ?: PanelConfig.default(battle)
+
+    fun setBottomPanel(battle: Boolean, config: PanelConfig) {
+        prefs.edit().putString(panelKey(battle), config.toJson()).apply()
+    }
+
+    private fun panelKey(battle: Boolean) = if (battle) "panelBattle" else "panelField"
 
     /** Whether a pad's sticks move the player. */
     var stickEnabled: Boolean
@@ -151,7 +171,7 @@ class Preferences(context: Context) {
 
     /** Mirrors the current pad controls into the file the emulator reads at startup. */
     fun writeControls(filesDir: File, padConnected: Boolean) =
-        writeControlsFile(filesDir, controlBindings, stickEnabled, padConnected)
+        writeControlsFile(filesDir, padKeys, stickEnabled, padConnected)
 
     /** Mirrors the touch overlay into the file the emulator reads at startup. */
     fun writeTouch(filesDir: File) = writeTouchFile(filesDir, touchStyle, moveMode, touchScale, touchOpacity, touchLayout)

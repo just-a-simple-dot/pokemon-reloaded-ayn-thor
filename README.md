@@ -1,11 +1,52 @@
-# Pokémon Reloaded en Android
+# Pokémon Reloaded en Android · edición AYN Thor (doble pantalla)
 
 [![Licencia GPL-2.0](https://img.shields.io/badge/Licencia-GPL--2.0-515050?style=for-the-badge&logo=gnu&logoColor=000000&labelColor=FFFFFF)](LICENSE)
-[![Última versión](https://img.shields.io/github/v/release/Klisee/pokemon-reloaded-android?style=for-the-badge&label=Versi%C3%B3n&labelColor=FFFFFF&color=3DDC84&logo=android&logoColor=000000)](https://github.com/Klisee/pokemon-reloaded-android/releases/latest)
-[![Descargas totales](https://img.shields.io/github/downloads/Klisee/pokemon-reloaded-android/total?style=for-the-badge&label=Descargas&labelColor=FFFFFF&color=1F6FEB&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iIzAwMCIgZD0iTTUgMjBoMTR2LTJINXYyek0xOSA5aC00VjNIOXY2SDVsNyA3IDctN3oiLz48L3N2Zz4%3D)](https://github.com/Klisee/pokemon-reloaded-android/releases)
+[![Última versión](https://img.shields.io/github/v/release/just-a-simple-dot/pokemon-reloaded-ayn-thor?include_prereleases&style=for-the-badge&label=Versi%C3%B3n&labelColor=FFFFFF&color=3DDC84&logo=android&logoColor=000000)](https://github.com/just-a-simple-dot/pokemon-reloaded-ayn-thor/releases)
+[![Descargas totales](https://img.shields.io/github/downloads/just-a-simple-dot/pokemon-reloaded-ayn-thor/total?style=for-the-badge&label=Descargas&labelColor=FFFFFF&color=1F6FEB&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iIzAwMCIgZD0iTTUgMjBoMTR2LTJINXYyek0xOSA5aC00VjNIOXY2SDVsNyA3IDctN3oiLz48L3N2Zz4%3D)](https://github.com/just-a-simple-dot/pokemon-reloaded-ayn-thor/releases)
 
-Ejecuta **Pokémon Reloaded** en Android sin emulador de Windows de por medio. Lo mantiene
-[@Klisee](https://github.com/Klisee), para la comunidad.
+Ejecuta **Pokémon Reloaded** en Android sin emulador de Windows de por medio.
+
+Este repo es un fork de [Pokémon Reloaded en Android](https://github.com/Klisee/pokemon-reloaded-android),
+de [@Klisee](https://github.com/Klisee), adaptado a consolas de **doble pantalla** como la **AYN Thor**:
+el juego va arriba y la pantalla de abajo se convierte en un panel de accesos directos. En un móvil de
+una sola pantalla funciona igual que la app original.
+
+## Lo nuevo de esta edición
+
+- **Panel en la segunda pantalla.** Botones táctiles que pulsan teclas del juego (movimientos, menú,
+  objetos, Pokéball, ataques…), más la **hora** y el **porcentaje de batería**. La ventana del panel
+  nunca se queda con el foco, así que los controles físicos de la consola siguen llegando al juego
+  aunque toques abajo.
+- **Un panel fuera de combate y otro en combate.** El juego avisa al empezar y al terminar cada
+  combate, y el panel cambia solo.
+- **Panel editable**, en Ajustes → Pantalla inferior: nombre, tecla y orden de cada botón, añadir o
+  borrar botones, y el título y las columnas (2 a 5) de cada sección, para cada uno de los dos paneles.
+- **Mando reasignable a cualquier tecla**, en Ajustes → Mando: cada botón (A, B, X, Y, LB, RB, LT, RT,
+  los dos sticks al pulsarlos, Start y Select) puede pulsar cualquier tecla del teclado (letras,
+  números, F1–F12, flechas, Shift/Ctrl/Alt, símbolos, teclado numérico) o quedarse sin asignar.
+- **Se instala junto a la app original**: se llama *Pokemon Reloaded Thor* (`com.klisee.reloaded.thor`),
+  así que no la sustituye. Tendrás que importar el juego en ella y pasar tu partida desde Ajustes → Partidas.
+
+### Mando por defecto
+
+| Mando (Xbox) | Tecla | | Mando (Xbox) | Tecla |
+|---|---|---|---|---|
+| X | Z (interactuar) | | LB | Ctrl (modificadores) |
+| A | X (cancelar / correr) | | LT | `<` (ataques) |
+| B | C | | RB | B (Pokéball) |
+| Y | V | | RT | O (objetos) |
+| Select | Enter (menú) | | Pulsar stick izq. | P (prob. captura) |
+| Start | Espacio (Pokémon) | | Pulsar stick der. | Espacio (Pokémon) |
+
+### Paneles por defecto
+
+**Fuera de combate:** *Movimientos* (1 Corte, 2 Vuelo, 3 Surf, 4 Fuerza, 5 Destello, 6 Golpe roca,
+7 Buceo, 8 Menú habilidades) y *Accesos* (B Sacar Pokémon, Enter Menú, O Objetos, V Bicicleta, M Mapa,
+Espacio Ver Pokémon, C Caña de pescar).
+
+**En combate:** *Pokémon* (1–6 Poke 1–6, Espacio Ver todos, S Siguiente) y *Accesos* (B Pokéball,
+`<` Ataques, A Objeto asignado, P Prob. captura, Ctrl Modificadores, O Objetos, E Escapar combate,
+M Mega evolución, F Flauta).
 
 ## Qué es esto, en realidad
 
@@ -30,8 +71,10 @@ ajustes, gestión de partidas y logs. El juego en sí no se toca.
 - **Ejecutar.** El motor (OpenGMK, en Rust) se carga como librería nativa y arranca el runner de
   Game Maker 8 sobre los datos del juego. El render va por OpenGL ES y el audio por AAudio.
 - **Controles.** La capa táctil no es fija: cambia según el estado del juego, así que en el mapa
-  tienes una cruceta y en los menús otra cosa. Cada botón pulsa una tecla del juego, y puedes
-  reasignar cualquiera desde Ajustes → Mando → Controles. También funciona un mando real, detectado solo.
+  tienes una cruceta y en los menús otra cosa. Cada botón pulsa una tecla del juego. También funciona
+  un mando real, detectado solo, y desde Ajustes → Mando eliges qué tecla pulsa cada botón.
+- **Segunda pantalla.** Si el dispositivo tiene otra pantalla, la app abre en ella el panel de
+  accesos directos con la hora y la batería, y lo cambia entre exploración y combate.
 - **Partidas.** Se leen y escriben en la carpeta del juego. Desde Ajustes → Partidas puedes verlas,
   exportarlas, importarlas, borrarlas y mover una de una ranura a otra. Si jugabas en PC, tu partida
   entra por aquí.
@@ -55,6 +98,7 @@ flowchart TB
         launcher["Lanzador e interfaz"]
         ajustes["Ajustes · partidas · logs"]
         overlay["Controles táctiles"]
+        panel["Panel de la segunda pantalla"]
     end
 
     subgraph engine["Motor · Rust (OpenGMK)"]
@@ -83,7 +127,8 @@ El repo no incluye ningún asset del juego, y eso es justo lo que lo mantiene li
 
 ## Cómo se usa
 
-1. Instala el APK de la última release.
+1. Instala el APK `arm64-v8a` de la [última release](https://github.com/just-a-simple-dot/pokemon-reloaded-ayn-thor/releases)
+   (es la arquitectura de la AYN Thor y de casi cualquier móvil actual).
 2. Consigue el juego en un `.zip` y dale a **Importar** (o usa **Descargar** para abrir el blog).
 3. **Jugar**. Si ya tenías partida en el PC, tráela desde Ajustes → Partidas.
 
@@ -137,7 +182,13 @@ cd ../../android
 
 La **universal** lleva las tres arquitecturas y sirve de comodín, a costa de pesar unos 10 MB más.
 
-El workflow `.github/workflows/build-apks.yml` compila las tres en CI al publicar un tag.
+Se puede compilar tanto en Linux como en Windows (en Windows hace falta Visual Studio Build Tools con
+C++ para los scripts de compilación de Rust).
+
+El workflow `.github/workflows/build-apks.yml` compila todas en CI al publicar un tag `v*` y las sube a
+una Release de GitHub. Para que todas las versiones se firmen igual (y se actualicen encima de la
+anterior sin desinstalar), guarda tu clave en los secrets del repo: `THOR_KEYSTORE_B64` (el `.p12` en
+base64) y `THOR_KEYSTORE_PASSWORD`. Sin ellos se firma con una clave debug distinta en cada ejecución.
 
 ## Licencia
 
@@ -152,6 +203,7 @@ es GPL-2.0-only, y `vendor/ramen` se distribuye bajo licencia Zlib.
 
 ## Créditos
 
+- **[Klisee](https://github.com/Klisee)**: por [Pokémon Reloaded en Android](https://github.com/Klisee/pokemon-reloaded-android), la app sobre la que está hecha esta edición.
 - **Pokémon Reloaded** es obra de **F3R Productions**: [el blog del juego](https://pokemon-reloaded.blogspot.com/)
 - **OpenGMK**, la reimplementación del motor sin la que esto no existiría: [github.com/OpenGMK/OpenGMK](https://github.com/OpenGMK/OpenGMK)
 - **LixarXDX**: por el rediseño de los controles táctiles y los controles clásicos, la base de la personalización de esta versión.

@@ -54,8 +54,9 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
     // A layout saved by the launcher's control screen wins over the built-in one; anything it
     // doesn't mention keeps the default below.
     if let Some(map) = std::sync::OnceLock::get(&MAPPED_BUTTONS) {
+        // An entry of `None` is a button the player left without a key on purpose.
         if let Some(mapped) = map.lock().ok().and_then(|map| map.get(&keycode).copied()) {
-            return Some(mapped)
+            return mapped
         }
     }
     Some(match keycode {
@@ -114,7 +115,7 @@ fn mapped_key(keycode: i32) -> Option<Key> {
 /// The pad layout the launcher's control screen saved, keyed by Android key code. The contents are
 /// replaced on every run rather than cached, because the engine and the launcher share one process
 /// and the layout can change between one run of the game and the next.
-static MAPPED_BUTTONS: std::sync::OnceLock<Mutex<HashMap<AKeyCode, Key>>> = std::sync::OnceLock::new();
+static MAPPED_BUTTONS: std::sync::OnceLock<Mutex<HashMap<AKeyCode, Option<Key>>>> = std::sync::OnceLock::new();
 
 /// Whether the physical sticks move the player.
 static STICK_ENABLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
@@ -194,8 +195,10 @@ fn load_controls() {
                 // A pad was connected when the game started, so start with the controls out of the
                 // way; touching the screen brings them back.
                 crate::touch_controls::set_pad_active(value.trim() != "0");
+            } else if let (Ok(code), "NONE") = (name.trim().parse::<AKeyCode>(), value.trim()) {
+                buttons.insert(code, None);
             } else if let (Ok(code), Some(key)) = (name.trim().parse::<AKeyCode>(), parse_key(value.trim())) {
-                buttons.insert(code, key);
+                buttons.insert(code, Some(key));
             }
         }
     }
@@ -303,8 +306,47 @@ fn parse_key(name: &str) -> Option<Key> {
         "RETURN" | "ENTER" => Key::Return,
         "SPACE" => Key::Space,
         "CONTROL" | "CTRL" => Key::LeftControl,
+        "SHIFT" => Key::LeftShift,
+        "ALT" => Key::LeftAlt,
+        "INSERT" => Key::Insert,
+        "DELETE" => Key::Delete,
+        "HOME" => Key::Home,
+        "END" => Key::End,
+        "PAGEUP" => Key::PageUp,
+        "PAGEDOWN" => Key::PageDown,
         // The key beside the left Shift on a Spanish keyboard, the one that types `<`.
         "<" | "LESS" => Key::Oem102,
+        "COMMA" => Key::Comma,
+        "PERIOD" => Key::Period,
+        "MINUS" => Key::Minus,
+        "PLUS" => Key::Plus,
+        "NUM0" => Key::Keypad0,
+        "NUM1" => Key::Keypad1,
+        "NUM2" => Key::Keypad2,
+        "NUM3" => Key::Keypad3,
+        "NUM4" => Key::Keypad4,
+        "NUM5" => Key::Keypad5,
+        "NUM6" => Key::Keypad6,
+        "NUM7" => Key::Keypad7,
+        "NUM8" => Key::Keypad8,
+        "NUM9" => Key::Keypad9,
+        "NUMADD" => Key::KeypadAdd,
+        "NUMSUB" => Key::KeypadSubtract,
+        "NUMMUL" => Key::KeypadMultiply,
+        "NUMDIV" => Key::KeypadDivide,
+        "NUMDEC" => Key::KeypadDecimal,
+        "F1" => Key::F1,
+        "F2" => Key::F2,
+        "F3" => Key::F3,
+        "F4" => Key::F4,
+        "F5" => Key::F5,
+        "F6" => Key::F6,
+        "F7" => Key::F7,
+        "F8" => Key::F8,
+        "F9" => Key::F9,
+        "F10" => Key::F10,
+        "F11" => Key::F11,
+        "F12" => Key::F12,
         "ESCAPE" => Key::Escape,
         "TAB" => Key::Tab,
         "BACKSPACE" => Key::Backspace,

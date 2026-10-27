@@ -1,0 +1,20 @@
+#Pokemones
+1;Poke 1
+2;Poke 2
+3;Poke 3
+4;Poke 4
+5;Poke 5
+6;Poke 6
+espacio; Ver todos
+s;siguiente
+
+#accessos 
+e;escapar combate ## tercera opcion izquierda
+p;Prob captura ## segunda opcion izquierda
+f;flauta ## flauta opcion medio
+m;mega evolucion ##tercera opcion al centro
+control;modificadores  ##segunda opcion al centro
+<;ataques ##primera opcion al centro
+o;objetos ##segunda opcion a la derecha
+b;pokeball ##primera opcion a la izquierda
+a;objeto asignado ##primera opcion a la derecha
