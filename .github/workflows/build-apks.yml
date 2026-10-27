@@ -129,3 +129,26 @@ jobs:
           path: |
             android/app/build/outputs/apk/release/*.apk
             src/OpenGMK/target/**/libgm8emulator.so
+
+  # On a version tag, the APKs are published as a GitHub Release so they can be downloaded
+  # straight from the device, without logging in or unzipping an artifact.
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download APKs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pokemon-reloaded-*
+          path: artifacts
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          prerelease: true
+          files: artifacts/**/*.apk
