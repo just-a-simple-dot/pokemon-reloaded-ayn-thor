@@ -2,11 +2,15 @@ package com.klisee.reloaded
 
 import android.annotation.SuppressLint
 import android.app.Presentation
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.hardware.display.DisplayManager
+import android.os.BatteryManager
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.TypedValue
@@ -18,6 +22,8 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import java.util.Date
 
 /** One shortcut of the second screen: the game key it presses and what it does in the game. */
 private class Shortcut(val key: String, val keyLabel: String, val text: String)
@@ -87,8 +93,72 @@ class BottomScreen(
         root.addView(title("Movimientos"))
         addGrid(root, MOVES, columns = 4, color = MOVE_COLOR)
         root.addView(title("Accesos"))
-        addGrid(root, TOOLS, columns = 3, color = TOOL_COLOR)
+        addGrid(root, TOOLS, columns = 3, color = TOOL_COLOR, trailing = status())
         setContentView(root)
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Clock and battery, in the space the last row of shortcuts leaves free.
+
+    private lateinit var clock: TextView
+    private lateinit var battery: TextView
+
+    private val statusReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_BATTERY_CHANGED) showBattery(intent) else showClock()
+        }
+    }
+
+    private fun status(): View {
+        clock = TextView(context).apply {
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+        battery = TextView(context).apply {
+            setTextColor(0xFF9AA4AE.toInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            gravity = Gravity.CENTER
+        }
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            addView(clock)
+            addView(battery)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_TIME_TICK)
+            addAction(Intent.ACTION_TIME_CHANGED)
+            addAction(Intent.ACTION_TIMEZONE_CHANGED)
+            addAction(Intent.ACTION_BATTERY_CHANGED)
+        }
+        // The battery broadcast is sticky, so registering hands back the current level at once.
+        ContextCompat.registerReceiver(context, statusReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+            ?.let { showBattery(it) }
+        showClock()
+    }
+
+    override fun onStop() {
+        runCatching { context.unregisterReceiver(statusReceiver) }
+        super.onStop()
+    }
+
+    private fun showClock() {
+        clock.text = android.text.format.DateFormat.getTimeFormat(context).format(Date())
+    }
+
+    private fun showBattery(intent: Intent) {
+        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+        if (level < 0 || scale <= 0) return
+        val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val charging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+        battery.text = "Batería ${level * 100 / scale}%" + if (charging) " ⚡" else ""
     }
 
     private fun title(text: String) = TextView(context).apply {
@@ -99,12 +169,18 @@ class BottomScreen(
         setPadding(dp(6), dp(6), dp(6), dp(2))
     }
 
-    private fun addGrid(root: LinearLayout, shortcuts: List<Shortcut>, columns: Int, color: Int) {
+    /** Lays the shortcuts out in rows; `trailing`, if any, fills what the last row leaves free. */
+    private fun addGrid(root: LinearLayout, shortcuts: List<Shortcut>, columns: Int, color: Int, trailing: View? = null) {
         for (row in shortcuts.chunked(columns)) {
             val line = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             for (shortcut in row) line.addView(button(shortcut, color), LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f))
             // A short last row keeps the same button width as the others.
-            repeat(columns - row.size) { line.addView(View(context), LinearLayout.LayoutParams(0, 0, 1f)) }
+            val free = columns - row.size
+            if (free > 0 && trailing != null) {
+                line.addView(trailing, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, free.toFloat()))
+            } else {
+                repeat(free) { line.addView(View(context), LinearLayout.LayoutParams(0, 0, 1f)) }
+            }
             root.addView(line, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         }
     }
