@@ -32,7 +32,7 @@ una sola pantalla funciona igual que la app original.
 | Mando (Xbox) | Tecla | | Mando (Xbox) | Tecla |
 |---|---|---|---|---|
 | X | Z (interactuar) | | LB | Ctrl (modificadores) |
-| A | X (cancelar / correr) | | LT | `<` (ataques) |
+| A | X (cancelar / correr) | | LT | Shift izq. (ataques) |
 | B | C | | RB | B (Pokéball) |
 | Y | V | | RT | O (objetos) |
 | Select | Enter (menú) | | Pulsar stick izq. | P (prob. captura) |
@@ -45,7 +45,7 @@ una sola pantalla funciona igual que la app original.
 Espacio Ver Pokémon, C Caña de pescar).
 
 **En combate:** *Pokémon* (1–6 Poke 1–6, Espacio Ver todos, S Siguiente) y *Accesos* (B Pokéball,
-`<` Ataques, A Objeto asignado, P Prob. captura, Ctrl Modificadores, O Objetos, E Escapar combate,
+Shift izq. Ataques, A Objeto asignado, P Prob. captura, Ctrl Modificadores, O Objetos, E Escapar combate,
 M Mega evolución, F Flauta).
 
 ## Qué es esto, en realidad

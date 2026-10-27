@@ -80,7 +80,7 @@ data class PanelConfig(val sections: List<PanelSection>) {
                     "Accesos", 3,
                     listOf(
                         PanelButton("B", "Pokéball"),
-                        PanelButton("<", "Ataques"),
+                        PanelButton("SHIFT", "Ataques"),
                         PanelButton("A", "Objeto asignado"),
                         PanelButton("P", "Prob. captura"),
                         PanelButton("CONTROL", "Modificadores"),

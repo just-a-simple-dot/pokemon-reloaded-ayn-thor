@@ -32,7 +32,7 @@ enum class PadButton(val code: Int, val label: String, val defaultKey: String?) 
     Y(100, "Y / triángulo", "V"),
     L1(102, "LB / L1", "CONTROL"),
     R1(103, "RB / R1", "B"),
-    L2(104, "LT / L2", "<"),
+    L2(104, "LT / L2", "SHIFT"),
     R2(105, "RT / R2", "O"),
     L3(106, "Pulsar stick izquierdo", "P"),
     R3(107, "Pulsar stick derecho", "SPACE"),

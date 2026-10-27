@@ -14,7 +14,7 @@ val GAME_KEYS: List<GameKey> = buildList {
     add(GameKey("ESCAPE", "Esc", special))
     add(GameKey("TAB", "Tab", special))
     add(GameKey("BACKSPACE", "Borrar", special))
-    add(GameKey("SHIFT", "Shift", special))
+    add(GameKey("SHIFT", "Shift izq.", special))
     add(GameKey("CONTROL", "Ctrl", special))
     add(GameKey("ALT", "Alt", special))
     add(GameKey("INSERT", "Insert", special))
@@ -65,7 +65,7 @@ fun keyHint(id: String?): String = when (id) {
     "B" -> "Pokéball"
     "CONTROL" -> "Modificadores"
     "O" -> "Objetos"
-    "<" -> "Ataques"
+    "SHIFT" -> "Ataques"
     "P" -> "Prob. captura"
     "E" -> "Escapar combate"
     "M" -> "Mapa / Mega"

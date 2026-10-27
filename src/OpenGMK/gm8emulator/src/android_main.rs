@@ -83,7 +83,7 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
         //   R1 / RB / R                      -> B
         //   L1 / LB / L                      -> Control
         //   R2 / RT / ZR                     -> O
-        //   L2 / LT / ZL                     -> < (the key beside the left Shift)
+        //   L2 / LT / ZL                     -> left Shift
         //   left stick press                 -> P
         //   right stick press                -> Space
         AKEYCODE_BUTTON_X => Key::Z,
@@ -95,7 +95,7 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
         AKEYCODE_BUTTON_R1 => Key::B,
         AKEYCODE_BUTTON_L1 => Key::LeftControl,
         AKEYCODE_BUTTON_R2 => Key::O,
-        AKEYCODE_BUTTON_L2 => Key::Oem102,
+        AKEYCODE_BUTTON_L2 => Key::LeftShift,
         AKEYCODE_BUTTON_THUMBL => Key::P,
         AKEYCODE_BUTTON_THUMBR => Key::Space,
 
@@ -483,13 +483,9 @@ fn pointer_down(id: i32, x: f32, y: f32) {
     if let Some(ids)=SWALLOWED_INPUTS.lock().unwrap().as_mut(){ids.remove(&id);}
     let (w, h) = android::window_size();
     let (wf, hf) = (w as f32, h as f32);
-    // The first touch after using a pad only brings the controls back. It must not also land in the
-    // game as a click, or reaching for the on-screen buttons would act on whatever is under them.
-    if crate::touch_controls::pad_active() {
-        crate::touch_controls::set_pad_active(false);
-        SWALLOWED_INPUTS.lock().unwrap().get_or_insert_with(std::collections::HashSet::new).insert(id);
-        return
-    }
+    // On a handheld with built-in controls (AYN Thor) the on-screen controls stay hidden once the pad
+    // is in use: touching the screen no longer brings them back, it just reaches the game. The
+    // hidden controls take no hits, so the touch falls through to the game as a click.
     let on_movement = wf > 0.0 && hf > 0.0 && crate::touch_controls::movement_hit(x / wf, y / hf, wf, hf);
     // Any *other* touch while the party wheel is up cancels it - but not the movement stick: while
     // walking the player keeps touching and lifting it, and that must not close the wheel.
