@@ -32,11 +32,12 @@ enum class ControlAction(val key: String, val defaultCode: Int) {
     V("V", 100), // Y (Xbox) / triangulo (PlayStation) / arriba
     ENTER("RETURN", 109), // select, share, view, menos
     SPACE("SPACE", 108), // start, options, menu, mas
+    SPACE_R3("SPACE", 107), // pulsar el stick derecho
     B("B", 103), // R1, RB
-    M("M", 102), // L1, LB
+    CONTROL("CONTROL", 102), // L1, LB
     O("O", 105), // R2, RT, ZR
-    S("S", 104), // L2, LT, ZL
-    E("E", 106), // pulsar cualquier stick
+    LESS("<", 104), // L2, LT, ZL
+    P("P", 106), // pulsar el stick izquierdo
 }
 
 /** What the key does in the game, for the ones that are known. */
@@ -44,8 +45,13 @@ val ControlAction.hint: String
     get() = when (this) {
         ControlAction.Z -> "Interactuar y confirmar"
         ControlAction.X -> "Cancelar y correr"
-        ControlAction.O -> "Mochila"
-        ControlAction.E -> "Escapar de un Pokemon salvaje"
+        ControlAction.ENTER -> "Menu"
+        ControlAction.SPACE, ControlAction.SPACE_R3 -> "Pokemon"
+        ControlAction.B -> "Pokeball"
+        ControlAction.CONTROL -> "Modificadores"
+        ControlAction.O -> "Objetos"
+        ControlAction.LESS -> "Ataques"
+        ControlAction.P -> "Probabilidad de captura"
         else -> ""
     }
 

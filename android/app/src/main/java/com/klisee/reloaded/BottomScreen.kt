@@ -34,17 +34,21 @@ private val MOVES = listOf(
     Shortcut("8", "8", "Menú habilidades"),
 )
 
-/** The game's menus and tools. */
+/** The game's menus and tools, row by row in a three-column grid. */
 private val TOOLS = listOf(
-    Shortcut("RETURN", "Enter", "Menú"),
-    Shortcut("SPACE", "Espacio", "Pokémon"),
-    Shortcut("O", "O", "Objetos"),
     Shortcut("B", "B", "Pokéball"),
+    Shortcut("RETURN", "Enter", "Menú"),
+    Shortcut("O", "O", "Objetos"),
+
     Shortcut("<", "<", "Ataques"),
-    Shortcut("P", "P", "Prob. captura"),
-    Shortcut("F", "F", "Flauta"),
-    Shortcut("M", "M", "Mapa / Mega"),
     Shortcut("CONTROL", "Ctrl", "Modificadores"),
+    Shortcut("SPACE", "Espacio", "Pokémon"),
+
+    Shortcut("E", "E", "Escapar combate"),
+    Shortcut("M", "M", "Mapa / Mega"),
+    Shortcut("F", "F", "Flauta"),
+
+    Shortcut("P", "P", "Prob. captura"),
 )
 
 /** A tap shorter than this is held until it, so the game (at 30 steps/s) cannot miss the key. */

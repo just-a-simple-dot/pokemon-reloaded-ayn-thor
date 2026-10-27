@@ -80,10 +80,11 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
         //   select, share, view, minus      -> Enter
         //   start, options, menu, plus      -> Space
         //   R1 / RB / R                      -> B
-        //   L1 / LB / L                      -> M
+        //   L1 / LB / L                      -> Control
         //   R2 / RT / ZR                     -> O
-        //   L2 / LT / ZL                     -> S
-        //   stick press (either one)         -> E
+        //   L2 / LT / ZL                     -> < (the key beside the left Shift)
+        //   left stick press                 -> P
+        //   right stick press                -> Space
         AKEYCODE_BUTTON_X => Key::Z,
         AKEYCODE_BUTTON_A => Key::X,
         AKEYCODE_BUTTON_B => Key::C,
@@ -91,10 +92,11 @@ fn map_key(keycode: AKeyCode) -> Option<Key> {
         AKEYCODE_BUTTON_SELECT => Key::Return,
         AKEYCODE_BUTTON_START => Key::Space,
         AKEYCODE_BUTTON_R1 => Key::B,
-        AKEYCODE_BUTTON_L1 => Key::M,
+        AKEYCODE_BUTTON_L1 => Key::LeftControl,
         AKEYCODE_BUTTON_R2 => Key::O,
-        AKEYCODE_BUTTON_L2 => Key::S,
-        AKEYCODE_BUTTON_THUMBL | AKEYCODE_BUTTON_THUMBR => Key::E,
+        AKEYCODE_BUTTON_L2 => Key::Oem102,
+        AKEYCODE_BUTTON_THUMBL => Key::P,
+        AKEYCODE_BUTTON_THUMBR => Key::Space,
 
         _ => return None,
     })
