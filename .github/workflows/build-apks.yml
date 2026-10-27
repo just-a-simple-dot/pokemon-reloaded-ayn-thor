@@ -158,5 +158,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.ref_name }}
-          prerelease: true
+          prerelease: false
+          make_latest: true
           files: artifacts/**/*.apk
