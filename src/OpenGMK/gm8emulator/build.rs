@@ -88,9 +88,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("cargo:rustc-link-lib=aaudio");
     }
 
-    // Windows-specific resources
+    // Windows-specific resources. `#[cfg]` only says the host is Windows; an Android build made on
+    // a Windows PC has no use for (and cannot compile) the icon and manifest.
     #[cfg(target_os = "windows")]
-    {
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         // This code reduces size of the manifest resource. Some important notes about:
         // * Last char trickery is necessary to prevent gluing attributes.
         // * Windows XML parser doesn't understand LF line endings in manifests.
